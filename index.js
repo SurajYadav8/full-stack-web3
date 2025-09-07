@@ -28,9 +28,13 @@ async function fund(){
             transport: custom(window.ethereum)
         })
         await walletClient.requestAddresses()
-
         
-        
+        publicClient = createPublicClient({
+            transport: custom(window.ethereum)
+        })
+        await publicClient.simulateContract({
+            // address ???
+        })
     }
     else {
         connectButton.innerHTML = "Please install Metamask!"
