@@ -1,4 +1,5 @@
-import {createWalletClient, custom, createPublicClient} from "https://esm.sh/viem"
+import {createWalletClient, custom, createPublicClient, parseEther, defineChain} from "https://esm.sh/viem"
+import { abi, contractAddress} from "./constants-js"
 
 const connectButton = document.getElementById("connectButton")
 const fundButton = document.getElementById("fundButton")
@@ -27,13 +28,20 @@ async function fund(){
         walletClient = createWalletClient({
             transport: custom(window.ethereum)
         })
-        await walletClient.requestAddresses()
+
+        const [connectedAccount] = await walletClient.requestAddresses()
+        const currentChain = await getCurrentChain(walletClient )
         
         publicClient = createPublicClient({
             transport: custom(window.ethereum)
         })
         await publicClient.simulateContract({
-            // address ???
+            address: contractAddress,
+            abi: abi,
+            functionName: "fund",
+            account: connectedAccount,
+            chain: currentChain,
+            value: parseEther(ethAmount) ,
         })
     }
     else {
@@ -41,6 +49,25 @@ async function fund(){
     }
 
     
+}
+
+async function getCurrentChain(client) {
+    const chainId = await client.getChainId()
+    const currentChain = defineChain({
+        id: chainId,
+        name: "Custom Chain",
+        nativeCurrency: {
+            name:"Ether",
+            symbol:"ETH",
+            decimals: 18
+        },
+        rpcUrls:{
+            default:{
+                http: ["https://localhost:8545"],
+            },
+        },
+    })
+    return currentChain
 }
 
 connectButton.onclick = connect
