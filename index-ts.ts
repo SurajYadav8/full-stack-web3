@@ -7,6 +7,7 @@ import {
   createPublicClient,
   type WalletClient,
   type PublicClient,
+  getAddress,
 } from "viem"
 import "viem/window"
 import { abi, contractAddress } from "./constants-ts"
@@ -16,6 +17,7 @@ const fundButton = document.getElementById("fundButton") as HTMLButtonElement
 const balanceButton = document.getElementById("balanceButton") as HTMLButtonElement
 const withdrawButton = document.getElementById("withdrawButton") as HTMLButtonElement
 const ethAmountInput = document.getElementById("ethAmount") as HTMLInputElement
+const fundingAddress = document.getElementById("fundingAddress") as HTMLInputElement
 
 let walletClient: WalletClient
 let publicClient: PublicClient
@@ -139,8 +141,35 @@ async function getCurrentChain(client: WalletClient): Promise<ReturnType<typeof 
   return currentChain
 }
 
-// Attach event listeners
+export async function getAddressToAmountFunded(): Promise<void> {
+  const address = fundingAddress.value;
+  console.log(`Checking funding amount for address: ${address}`);
+
+  if (typeof window.ethereum !== "undefined" && address) {
+    try {
+      publicClient = createPublicClient({
+        transport: custom(window.ethereum),
+      });
+
+      // Read from the contract's addressToAmountFunded mapping
+      const amountFunded = await publicClient.readContract({
+        address: contractAddress,
+        abi,
+        functionName: "addressToAmountFunded",
+        args: [getAddress(address)], // Ensures correct checksum format
+      });
+
+      console.log(`Amount funded: ${formatEther(amountFunded as bigint)} ETH`);
+    } catch (error) {
+      console.error("Error reading contract:", error);
+    }
+  } else {
+    console.error("Please connect wallet and enter an address");
+  }
+}
+
 connectButton.onclick = connect
 fundButton.onclick = fund
 balanceButton.onclick = getBalance
 withdrawButton.onclick = withdraw
+fundingAddress.onclick = getAddressToAmountFunded 

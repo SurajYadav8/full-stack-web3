@@ -39,16 +39,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fund = fund;
 exports.getBalance = getBalance;
 exports.withdraw = withdraw;
+exports.getAddressToAmountFunded = getAddressToAmountFunded;
 var viem_1 = require("viem");
 require("viem/window");
-var constants_ts_ts_1 = require("./constants-ts.ts");
+var constants_ts_1 = require("./constants-ts");
 var connectButton = document.getElementById("connectButton");
 var fundButton = document.getElementById("fundButton");
 var balanceButton = document.getElementById("balanceButton");
 var withdrawButton = document.getElementById("withdrawButton");
 var ethAmountInput = document.getElementById("ethAmount");
+var fundingAddress = document.getElementById("fundingAddress");
 var walletClient;
 var publicClient;
+console.log("HI!!!!!");
 function connect() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
@@ -98,8 +101,8 @@ function fund() {
                         transport: (0, viem_1.custom)(window.ethereum),
                     });
                     return [4 /*yield*/, publicClient.simulateContract({
-                            address: constants_ts_ts_1.contractAddress,
-                            abi: constants_ts_ts_1.abi,
+                            address: constants_ts_1.contractAddress,
+                            abi: constants_ts_1.abi,
                             functionName: "fund",
                             account: account,
                             chain: currentChain,
@@ -139,7 +142,7 @@ function getBalance() {
                         transport: (0, viem_1.custom)(window.ethereum),
                     });
                     return [4 /*yield*/, publicClient.getBalance({
-                            address: constants_ts_ts_1.contractAddress,
+                            address: constants_ts_1.contractAddress,
                         })];
                 case 2:
                     balance = _a.sent();
@@ -185,8 +188,8 @@ function withdraw() {
                     console.log("Processing transaction...");
                     return [4 /*yield*/, publicClient.simulateContract({
                             account: account,
-                            address: constants_ts_ts_1.contractAddress,
-                            abi: constants_ts_ts_1.abi,
+                            address: constants_ts_1.contractAddress,
+                            abi: constants_ts_1.abi,
                             functionName: "withdraw",
                             chain: currentChain,
                         })];
@@ -237,8 +240,46 @@ function getCurrentChain(client) {
         });
     });
 }
-// Attach event listeners
+function getAddressToAmountFunded() {
+    return __awaiter(this, void 0, void 0, function () {
+        var address, amountFunded, error_4;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    address = fundingAddress.value;
+                    console.log("Checking funding amount for address: ".concat(address));
+                    if (!(typeof window.ethereum !== "undefined" && address)) return [3 /*break*/, 5];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    publicClient = (0, viem_1.createPublicClient)({
+                        transport: (0, viem_1.custom)(window.ethereum),
+                    });
+                    return [4 /*yield*/, publicClient.readContract({
+                            address: constants_ts_1.contractAddress,
+                            abi: constants_ts_1.abi,
+                            functionName: "addressToAmountFunded",
+                            args: [(0, viem_1.getAddress)(address)], // Ensures correct checksum format
+                        })];
+                case 2:
+                    amountFunded = _a.sent();
+                    console.log("Amount funded: ".concat((0, viem_1.formatEther)(amountFunded), " ETH"));
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_4 = _a.sent();
+                    console.error("Error reading contract:", error_4);
+                    return [3 /*break*/, 4];
+                case 4: return [3 /*break*/, 6];
+                case 5:
+                    console.error("Please connect wallet and enter an address");
+                    _a.label = 6;
+                case 6: return [2 /*return*/];
+            }
+        });
+    });
+}
 connectButton.onclick = connect;
 fundButton.onclick = fund;
 balanceButton.onclick = getBalance;
 withdrawButton.onclick = withdraw;
+fundingAddress.onclick = getAddressToAmountFunded;
